@@ -4,24 +4,32 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const app=express();
+app.use(express.json());
 const PORT=process.env.PORT||3000;
 const anthropic=new Anthropic({apiKey:process.env.ANTHROPIC_API_KEY});
 
-app.get('/',async(req,res)=>{
-const platform=req.query.platform||'both';
-const niche=req.query.niche||'solana';
-const minScore=parseInt(req.query.minscore||'70');
-
-if(req.query.search){
+app.post('/find',async(req,res)=>{
+const {platform,niche,minscore,location}=req.body;
 try{
-const response=await anthropic.messages.create({model:'claude-sonnet-4-5',max_tokens:2000,messages:[{role:'user',content:`You are a crypto influencer research agent for $DC (DubaiCoin), a Solana-based Web3 ecosystem by Ben X Capital.\n\nFind 6 real mid-to-macro crypto influencers (50K-2M followers) on ${platform==='both'?'Twitter/X and Telegram':platform} focused on ${niche} who would be good long-term partners for $DC.\n\nReturn ONLY a JSON array:\n[\n{\n"name":"Real name",\n"handle":"@handle",\n"platform":"Twitter or Telegram or Both",\n"followers":"e.g. 250K",\n"niche":"e.g. Solana DeFi",\n"engagement":0-100,\n"authenticity":0-100,\n"alignment":0-100,\n"partnership":0-100,\n"recommendation":"Strong match or Watch or Avoid",\n"reason":"One sentence why"\n}\n]\n\nOnly real known crypto influencers. JSON only, no other text.`}]});
+const response=await anthropic.messages.create({model:'claude-sonnet-4-5',max_tokens:2000,messages:[{role:'user',content:`You are a crypto influencer research agent for $DC (DubaiCoin), a Solana-based Web3 ecosystem by Ben X Capital.\n\nFind 6 real mid-to-macro crypto influencers (50K-2M followers) on ${platform==='both'?'Twitter/X and Telegram':platform} focused on ${niche} ${location!=='global'?'based in or focused on '+location:''} who would be good long-term partners for $DC.\n\nReturn ONLY a JSON array:\n[\n{\n"name":"Real name",\n"handle":"@handle",\n"platform":"Twitter or Telegram or Both",\n"followers":"e.g. 250K",\n"location":"Country or Region",\n"niche":"e.g. Solana DeFi",\n"engagement":0-100,\n"authenticity":0-100,\n"alignment":0-100,\n"partnership":0-100,\n"recommendation":"Strong match or Watch or Avoid",\n"reason":"One sentence why",\n"telegram":"@telegramhandle or null",\n"email":"email if known or null",\n"recenttopic":"Their most recent content topic"\n}\n]\n\nOnly real known crypto influencers. JSON only, no other text.`}]});
 const text=response.content[0].text.replace(/```json|```/g,'').trim();
 const influencers=JSON.parse(text);
-const filtered=influencers.filter(i=>i.partnership>=minScore);
-return res.json({success:true,data:filtered});
-}catch(err){return res.json({success:false,error:err.message});}
-}
+const filtered=influencers.filter(i=>i.partnership>=parseInt(minscore));
+res.json({success:true,data:filtered});
+}catch(err){res.json({success:false,error:err.message});}
+});
 
+app.post('/outreach',async(req,res)=>{
+const {name,handle,platform,niche,location,recenttopic,followers}=req.body;
+try{
+const response=await anthropic.messages.create({model:'claude-sonnet-4-5',max_tokens:1500,messages:[{role:'user',content:`You are a partnership outreach specialist for $DC (DubaiCoin), a Solana-based Web3 ecosystem by Ben X Capital. The founder is Nassreddine Ben Lassoued, CEO of Ben X Capital based in Dubai.\n\n$DC is built on Solana with staking (up to 35% APY), NFTs, DAO, and presale launching soon. Public launch at Token 2049 Singapore October 2026.\n\nGenerate a complete outreach kit for this influencer:\nName: ${name}\nHandle: ${handle}\nPlatform: ${platform}\nNiche: ${niche}\nLocation: ${location}\nFollowers: ${followers}\nRecent content: ${recenttopic}\n\nReturn ONLY a JSON object:\n{\n"email_subject":"Compelling email subject line",\n"email_body":"Professional cold email (5-6 lines max, personalized to their niche and recent content)",\n"telegram_message":"Short Telegram outreach message (3-4 lines, casual but professional)",\n"twitter_strategy":"3-step Twitter engagement strategy to warm them up before DM",\n"pitch_summary":"3-line $DC pitch tailored to their audience style",\n"best_channel":"Email or Telegram or Twitter - which channel to use first and why"\n}\n\nJSON only, no other text.`}]});
+const text=response.content[0].text.replace(/```json|```/g,'').trim();
+const kit=JSON.parse(text);
+res.json({success:true,data:kit});
+}catch(err){res.json({success:false,error:err.message});}
+});
+
+app.get('/',(req,res)=>{
 res.send(`<!DOCTYPE html>
 <html>
 <head>
@@ -30,19 +38,21 @@ res.send(`<!DOCTYPE html>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh}
-.wrap{max-width:900px;margin:0 auto;padding:2rem 1rem}
+.wrap{max-width:960px;margin:0 auto;padding:2rem 1rem}
 h1{font-size:28px;font-weight:600;margin-bottom:4px}
 .sub{color:#888;font-size:14px;margin-bottom:2rem}
-.filters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1rem}
+.filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:1rem}
 label{font-size:12px;color:#888;display:block;margin-bottom:6px}
-select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px}
+select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:13px}
 .btn{width:100%;padding:14px;background:#f0b429;border:none;border-radius:8px;color:#000;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:2rem}
 .btn:hover{background:#e0a419}
 .loading{text-align:center;padding:2rem;color:#888;display:none}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid #333;border-top-color:#f0b429;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
 .cards{display:flex;flex-direction:column;gap:16px}
 .card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:1.25rem}
 .card-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.avatar{width:44px;height:44px;border-radius:50%;background:#f0b429;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:#000;flex-shrink:0}
+.avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0}
 .name{font-weight:600;font-size:16px}
 .handle{font-size:13px;color:#888}
 .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
@@ -50,30 +60,41 @@ select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-r
 .b-platform{background:#1e3a5f;color:#60a5fa}
 .b-size{background:#1a3a1a;color:#4ade80}
 .b-niche{background:#3a2a00;color:#fbbf24}
+.b-location{background:#2a1a3a;color:#c084fc}
 .score-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .score-label{font-size:12px;color:#888;width:120px;flex-shrink:0}
 .bar{flex:1;height:4px;background:#2a2a2a;border-radius:2px;overflow:hidden}
 .fill{height:100%;border-radius:2px}
 .score-val{font-size:12px;font-weight:600;width:28px;text-align:right}
-.card-footer{border-top:1px solid #2a2a2a;padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:flex-start}
-.rec-strong{color:#4ade80}
-.rec-watch{color:#fbbf24}
-.rec-avoid{color:#f87171}
+.card-footer{border-top:1px solid #2a2a2a;padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.rec-strong{color:#4ade80;font-weight:600;font-size:13px}
+.rec-watch{color:#fbbf24;font-weight:600;font-size:13px}
+.rec-avoid{color:#f87171;font-weight:600;font-size:13px}
 .reason{font-size:12px;color:#888;margin-top:4px}
+.outreach-btn{padding:8px 16px;background:#f0b429;border:none;border-radius:8px;color:#000;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.outreach-btn:hover{background:#e0a419}
+.kit{background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:1rem;margin-top:12px;display:none}
+.kit-section{margin-bottom:14px}
+.kit-label{font-size:11px;color:#f0b429;font-weight:600;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px}
+.kit-content{font-size:13px;color:#ccc;line-height:1.6;white-space:pre-wrap;background:#1a1a1a;padding:10px;border-radius:6px}
+.kit-loading{text-align:center;padding:1rem;color:#888;font-size:13px}
+.best-channel{background:#1e3a1e;border:1px solid #2a4a2a;border-radius:8px;padding:10px;font-size:13px;color:#4ade80}
+.copy-btn{font-size:11px;padding:3px 8px;background:#2a2a2a;border:1px solid #333;border-radius:4px;color:#888;cursor:pointer;margin-left:8px;float:right}
+.copy-btn:hover{color:#fff}
 .empty{text-align:center;padding:3rem;color:#888}
-@media(max-width:600px){.filters{grid-template-columns:1fr}}
+@media(max-width:700px){.filters{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>Scout</h1>
-<p class="sub">Crypto Influencer Discovery Agent — Ben X Capital</p>
+<p class="sub">Crypto Influencer Discovery + Outreach Agent — Ben X Capital</p>
 <div class="filters">
 <div><label>Platform</label>
 <select id="platform">
 <option value="both">Both (X + Telegram)</option>
-<option value="twitter">X / Twitter only</option>
-<option value="telegram">Telegram only</option>
+<option value="twitter">X / Twitter</option>
+<option value="telegram">Telegram</option>
 </select></div>
 <div><label>Niche</label>
 <select id="niche">
@@ -83,37 +104,66 @@ select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-r
 <option value="presale">Token presales</option>
 <option value="all">All crypto</option>
 </select></div>
-<div><label>Min partnership score</label>
+<div><label>Location</label>
+<select id="location">
+<option value="global">Global</option>
+<option value="UAE and Middle East">UAE & Middle East</option>
+<option value="USA">USA</option>
+<option value="Europe">Europe</option>
+<option value="Asia">Asia</option>
+<option value="Africa">Africa</option>
+<option value="Latin America">Latin America</option>
+</select></div>
+<div><label>Min score</label>
 <select id="minscore">
 <option value="60">60+</option>
 <option value="70" selected>70+</option>
 <option value="80">80+</option>
 <option value="90">90+</option>
 </select></div>
+<div style="display:flex;align-items:flex-end">
+<button class="btn" style="margin:0" onclick="search()">Find</button>
 </div>
-<button class="btn" onclick="search()">Find influencers for $DC</button>
-<div class="loading" id="loading">Searching... this may take 20-30 seconds</div>
-<div class="cards" id="results"><div class="empty">Click "Find influencers" to discover crypto influencers for $DC partnerships</div></div>
+</div>
+<div class="loading" id="loading"><span class="spinner"></span>Searching... 20-30 seconds</div>
+<div class="cards" id="results"><div class="empty">Click Find to discover crypto influencers for $DC partnerships</div></div>
 </div>
 <script>
+const colors=['#f0b429','#60a5fa','#4ade80','#f87171','#a78bfa','#fb923c'];
 async function search(){
 const platform=document.getElementById('platform').value;
 const niche=document.getElementById('niche').value;
 const minscore=document.getElementById('minscore').value;
+const location=document.getElementById('location').value;
 document.getElementById('loading').style.display='block';
 document.getElementById('results').innerHTML='';
-const res=await fetch('/?search=1&platform='+platform+'&niche='+niche+'&minscore='+minscore);
+const res=await fetch('/find',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform,niche,minscore,location})});
 const data=await res.json();
 document.getElementById('loading').style.display='none';
 if(!data.success){document.getElementById('results').innerHTML='<div class="empty">Error: '+data.error+'</div>';return;}
-const colors=['#f0b429','#60a5fa','#4ade80','#f87171','#a78bfa','#fb923c'];
 const html=data.data.map((inf,i)=>{
 const initials=inf.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
 const recClass=inf.recommendation==='Strong match'?'rec-strong':inf.recommendation==='Watch'?'rec-watch':'rec-avoid';
-return '<div class="card"><div class="card-top"><div class="avatar" style="background:'+colors[i%6]+'">'+initials+'</div><div><div class="name">'+inf.name+'</div><div class="handle">'+inf.handle+' · '+inf.followers+' followers</div></div></div><div class="badges"><span class="badge b-platform">'+inf.platform+'</span><span class="badge b-size">'+inf.followers+'</span><span class="badge b-niche">'+inf.niche+'</span></div><div class="score-row"><span class="score-label">Engagement</span><div class="bar"><div class="fill" style="width:'+inf.engagement+'%;background:#60a5fa"></div></div><span class="score-val">'+inf.engagement+'</span></div><div class="score-row"><span class="score-label">Authenticity</span><div class="bar"><div class="fill" style="width:'+inf.authenticity+'%;background:#4ade80"></div></div><span class="score-val">'+inf.authenticity+'</span></div><div class="score-row"><span class="score-label">$DC alignment</span><div class="bar"><div class="fill" style="width:'+inf.alignment+'%;background:#f0b429"></div></div><span class="score-val">'+inf.alignment+'</span></div><div class="score-row"><span class="score-label">Partnership fit</span><div class="bar"><div class="fill" style="width:'+inf.partnership+'%;background:#a78bfa"></div></div><span class="score-val">'+inf.partnership+'</span></div><div class="card-footer"><div><span class="'+recClass+' " style="font-weight:600;font-size:13px">'+inf.recommendation+'</span><div class="reason">'+inf.reason+'</div></div></div></div>';
+return '<div class="card" id="card-'+i+'"><div class="card-top"><div class="avatar" style="background:'+colors[i%6]+';color:#000">'+initials+'</div><div><div class="name">'+inf.name+'</div><div class="handle">'+inf.handle+' · '+inf.followers+' followers</div></div></div><div class="badges"><span class="badge b-platform">'+inf.platform+'</span><span class="badge b-size">'+inf.followers+'</span><span class="badge b-niche">'+inf.niche+'</span><span class="badge b-location">📍'+inf.location+'</span></div><div class="score-row"><span class="score-label">Engagement</span><div class="bar"><div class="fill" style="width:'+inf.engagement+'%;background:#60a5fa"></div></div><span class="score-val">'+inf.engagement+'</span></div><div class="score-row"><span class="score-label">Authenticity</span><div class="bar"><div class="fill" style="width:'+inf.authenticity+'%;background:#4ade80"></div></div><span class="score-val">'+inf.authenticity+'</span></div><div class="score-row"><span class="score-label">$DC alignment</span><div class="bar"><div class="fill" style="width:'+inf.alignment+'%;background:#f0b429"></div></div><span class="score-val">'+inf.alignment+'</span></div><div class="score-row"><span class="score-label">Partnership fit</span><div class="bar"><div class="fill" style="width:'+inf.partnership+'%;background:#a78bfa"></div></div><span class="score-val">'+inf.partnership+'</span></div><div class="card-footer"><div><span class="'+recClass+'">'+inf.recommendation+'</span><div class="reason">'+inf.reason+'</div></div><button class="outreach-btn" onclick="getOutreach('+i+','+JSON.stringify(inf).replace(/</g,'&lt;')+')">Get Outreach Kit</button></div><div class="kit" id="kit-'+i+'"></div></div>';
 }).join('');
 document.getElementById('results').innerHTML=html||'<div class="empty">No influencers found. Try lowering the minimum score.</div>';
 }
+async function getOutreach(idx,inf){
+const kit=document.getElementById('kit-'+idx);
+kit.style.display='block';
+kit.innerHTML='<div class="kit-loading"><span class="spinner"></span>Generating outreach kit...</div>';
+const res=await fetch('/outreach',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(inf)});
+const data=await res.json();
+if(!data.success){kit.innerHTML='<div class="kit-loading">Error: '+data.error+'</div>';return;}
+const k=data.data;
+kit.innerHTML='<div class="best-channel">Best channel: '+k.best_channel+'</div>'+
+'<div class="kit-section" style="margin-top:12px"><div class="kit-label">Email subject<button class="copy-btn" onclick="copy(this,\`'+k.email_subject.replace(/`/g,"'")+'\`)">Copy</button></div><div class="kit-content">'+k.email_subject+'</div></div>'+
+'<div class="kit-section"><div class="kit-label">Cold email<button class="copy-btn" onclick="copy(this,\`'+k.email_body.replace(/`/g,"'").replace(/\n/g,'\\n')+'\`)">Copy</button></div><div class="kit-content">'+k.email_body+'</div></div>'+
+'<div class="kit-section"><div class="kit-label">Telegram message<button class="copy-btn" onclick="copy(this,\`'+k.telegram_message.replace(/`/g,"'").replace(/\n/g,'\\n')+'\`)">Copy</button></div><div class="kit-content">'+k.telegram_message+'</div></div>'+
+'<div class="kit-section"><div class="kit-label">Twitter strategy</div><div class="kit-content">'+k.twitter_strategy+'</div></div>'+
+'<div class="kit-section"><div class="kit-label">$DC pitch for their audience</div><div class="kit-content">'+k.pitch_summary+'</div></div>';
+}
+function copy(btn,text){navigator.clipboard.writeText(text.replace(/\\n/g,'\n'));btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000);}
 </script>
 </body>
 </html>`);
