@@ -95,7 +95,7 @@ select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-r
 @media(max-width:700px){.filters{grid-template-columns:1fr 1fr}}
 </style>
 </head>
-<body>
+<body><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAB4CAIAAAAovKYlAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz8=" style="position:fixed;top:16px;left:16px;height:70px;z-index:1000;border-radius:8px;">
 <div class="wrap">
 <h1>Scout</h1>
 <p class="sub">Crypto Influencer Discovery + Outreach Agent — Ben X Capital</p>
