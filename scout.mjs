@@ -19,6 +19,16 @@ res.json({success:true,data:filtered});
 }catch(err){res.json({success:false,error:err.message});}
 });
 
+app.post('/contact',async(req,res)=>{
+const {name,handle}=req.body;
+try{
+const response=await anthropic.messages.create({model:'claude-sonnet-4-5',max_tokens:500,messages:[{role:'user',content:'Find contact information for crypto influencer '+name+' ('+handle+'). Search for their business email, Linktree, contact page, or any public contact method. Return ONLY JSON: {"email":"email or null","linktree":"url or null","contact_page":"url or null","telegram":"@handle or null","bio_link":"any link from their bio or null","note":"one sentence on best way to contact them"} JSON only.'}]});
+const text=response.content[0].text.replace(/```json|```/g,'').trim();
+const contact=JSON.parse(text);
+res.json({success:true,data:contact});
+}catch(err){res.json({success:false,error:err.message});}
+});
+
 app.post('/outreach',async(req,res)=>{
 const {name,handle,platform,niche,location,recenttopic,followers}=req.body;
 try{
@@ -154,6 +164,26 @@ const recClass=inf.recommendation==="Strong match"?"rec-strong":inf.recommendati
 return "<div class=card id=card-"+i+"><div class=card-top><div class=avatar style='background:"+colors[i%6]+";color:#000'>"+initials+"</div><div><div class=inf-name>"+inf.name+"</div><div class=inf-handle>"+inf.handle+" - "+inf.followers+" followers</div></div></div><div class=badges><span class='badge b-platform'>"+inf.platform+"</span><span class='badge b-size'>"+inf.followers+"</span><span class='badge b-niche'>"+inf.niche+"</span><span class='badge b-location'>"+inf.location+"</span></div><div class=score-row><span class=score-label>Engagement</span><div class=bar><div class=fill style='width:"+inf.engagement+"%;background:#60a5fa'></div></div><span class=score-val>"+inf.engagement+"</span></div><div class=score-row><span class=score-label>Authenticity</span><div class=bar><div class=fill style='width:"+inf.authenticity+"%;background:#4ade80'></div></div><span class=score-val>"+inf.authenticity+"</span></div><div class=score-row><span class=score-label>$DC alignment</span><div class=bar><div class=fill style='width:"+inf.alignment+"%;background:#f0b429'></div></div><span class=score-val>"+inf.alignment+"</span></div><div class=score-row><span class=score-label>Partnership fit</span><div class=bar><div class=fill style='width:"+inf.partnership+"%;background:#a78bfa'></div></div><span class=score-val>"+inf.partnership+"</span></div><div class=card-footer><div><span class="+recClass+">"+inf.recommendation+"</span><div class=reason>"+inf.reason+"</div></div><button class=outreach-btn onclick='getOutreach("+i+")'>Get Outreach Kit</button></div><div class=kit id=kit-"+i+"></div></div>";
 }).join("");
 document.getElementById("results").innerHTML=html||"<div class=empty>No influencers found. Try lowering the minimum score.</div>";
+}
+async function getContact(idx){
+const inf=currentData[idx];
+const box=document.getElementById("contact-"+idx);
+box.style.display="block";
+box.innerHTML="<div class=kit-loading><span class=spinner></span>Searching for contact info...</div>";
+try{
+const res=await fetch("/contact",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:inf.name,handle:inf.handle})});
+const data=await res.json();
+if(!data.success){box.innerHTML="<div class=kit-loading>Error: "+data.error+"</div>";return;}
+const c=data.data;
+let html="<div style='margin-bottom:8px;font-size:12px;color:#f0b429;font-weight:600;text-transform:uppercase'>Contact Info</div>";
+if(c.email)html+="<div class=contact-item><span class=contact-label>Email</span><a class=contact-link href='mailto:"+c.email+"'>"+c.email+"</a></div>";
+if(c.linktree)html+="<div class=contact-item><span class=contact-label>Linktree</span><a class=contact-link href='"+c.linktree+"' target='_blank'>"+c.linktree+"</a></div>";
+if(c.contact_page)html+="<div class=contact-item><span class=contact-label>Contact page</span><a class=contact-link href='"+c.contact_page+"' target='_blank'>"+c.contact_page+"</a></div>";
+if(c.telegram)html+="<div class=contact-item><span class=contact-label>Telegram</span>"+c.telegram+"</div>";
+if(c.bio_link)html+="<div class=contact-item><span class=contact-label>Bio link</span><a class=contact-link href='"+c.bio_link+"' target='_blank'>"+c.bio_link+"</a></div>";
+html+="<div class=contact-item style='margin-top:8px;color:#888;font-size:12px'>"+c.note+"</div>";
+box.innerHTML=html;
+}catch(e){box.innerHTML="<div class=kit-loading>Error: "+e.message+"</div>";}
 }
 async function getOutreach(idx){
 const inf=currentData[idx];
