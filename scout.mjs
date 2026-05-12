@@ -167,9 +167,9 @@ if(!data.success){kit.innerHTML="<div class=kit-loading>Error: "+data.error+"</d
 const k=data.data;
 window["kit"+idx]=k;
 kit.innerHTML="<div class=best-channel>Best channel: "+k.best_channel+"</div>"+
-"<div class=kit-section><div class=kit-label><span>Email subject</span><button class=copy-btn onclick='copyKit("+idx+","email_subject")'>Copy</button></div><div class=kit-content id='ks-"+idx+"-email_subject'>"+k.email_subject+"</div></div>"+
-"<div class=kit-section><div class=kit-label><span>Cold email</span><button class=copy-btn onclick='copyKit("+idx+","email_body")'>Copy</button></div><div class=kit-content id='ks-"+idx+"-email_body'>"+k.email_body+"</div></div>"+
-"<div class=kit-section><div class=kit-label><span>Telegram message</span><button class=copy-btn onclick='copyKit("+idx+","telegram_message")'>Copy</button></div><div class=kit-content id='ks-"+idx+"-telegram_message'>"+k.telegram_message+"</div></div>"+
+"<div class=kit-section><div class=kit-label><span>Email subject</span><button class=copy-btn onclick='copyKit("+idx+",'email_subject')'>Copy</button></div><div class=kit-content id='ks-"+idx+"-email_subject'>"+k.email_subject+"</div></div>"+
+"<div class=kit-section><div class=kit-label><span>Cold email</span><button class=copy-btn onclick='copyKit("+idx+",'email_body')'>Copy</button></div><div class=kit-content id='ks-"+idx+"-email_body'>"+k.email_body+"</div></div>"+
+"<div class=kit-section><div class=kit-label><span>Telegram message</span><button class=copy-btn onclick='copyKit("+idx+",'telegram_message')'>Copy</button></div><div class=kit-content id='ks-"+idx+"-telegram_message'>"+k.telegram_message+"</div></div>"+
 "<div class=kit-section><div class=kit-label><span>Twitter strategy</span></div><div class=kit-content>"+k.twitter_strategy+"</div></div>"+
 "<div class=kit-section><div class=kit-label><span>$DC pitch for their audience</span></div><div class=kit-content>"+k.pitch_summary+"</div></div>";
 }catch(e){kit.innerHTML="<div class=kit-loading>Error: "+e.message+"</div>";}
