@@ -122,7 +122,7 @@ select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-r
 <option value="90">90+</option>
 </select></div>
 <div style="display:flex;align-items:flex-end">
-<button class="btn" style="margin:0" onclick="search()">Find</button>
+<button class="btn" style="margin:0" onclick="doSearch()">Find</button>
 </div>
 </div>
 <div class="loading" id="loading"><span class="spinner"></span>Searching... 20-30 seconds</div>
@@ -131,7 +131,7 @@ select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-r
 <script>
 const colors=["#f0b429","#60a5fa","#4ade80","#f87171","#a78bfa","#fb923c"];
 let currentData=[];
-async function search(){
+async function doSearch(){
 const platform=document.getElementById("platform").value;
 const niche=document.getElementById("niche").value;
 const minscore=document.getElementById("minscore").value;
