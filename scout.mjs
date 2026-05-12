@@ -11,7 +11,7 @@ const anthropic=new Anthropic({apiKey:process.env.ANTHROPIC_API_KEY});
 app.post('/find',async(req,res)=>{
 const {platform,niche,minscore,location}=req.body;
 try{
-const response=await anthropic.messages.create({model:'claude-sonnet-4-5',max_tokens:2000,messages:[{role:'user',content:`You are a crypto influencer research agent for $DC (DubaiCoin), a Solana-based Web3 ecosystem by Ben X Capital.\n\nFind 6 real mid-to-macro crypto influencers (50K-2M followers) on ${platform==='both'?'Twitter/X and Telegram':platform} focused on ${niche} ${location!=='global'?'based in or focused on '+location:''} who would be good long-term partners for $DC.\n\nReturn ONLY a JSON array:\n[\n{\n"name":"Real name",\n"handle":"@handle",\n"platform":"Twitter or Telegram or Both",\n"followers":"e.g. 250K",\n"location":"Country or Region",\n"niche":"e.g. Solana DeFi",\n"engagement":0-100,\n"authenticity":0-100,\n"alignment":0-100,\n"partnership":0-100,\n"recommendation":"Strong match or Watch or Avoid",\n"reason":"One sentence why",\n"telegram":"@telegramhandle or null",\n"email":"email if known or null",\n"recenttopic":"Their most recent content topic"\n}\n]\n\nOnly real known crypto influencers. JSON only, no other text.`}]});
+const response=await anthropic.messages.create({model:'claude-sonnet-4-5',max_tokens:2000,messages:[{role:'user',content:`You are a crypto influencer research agent for $DC (DubaiCoin), a Solana-based Web3 ecosystem by Ben X Capital. Find 6 real mid-to-macro crypto influencers (50K-2M followers) on ${platform==='both'?'Twitter/X and Telegram':platform} focused on ${niche} ${location!=='global'?'based in or focused on '+location:''} who would be good long-term partners for $DC. Return ONLY a JSON array: [{"name":"Real name","handle":"@handle","platform":"Twitter or Telegram or Both","followers":"e.g. 250K","location":"Country or Region","niche":"e.g. Solana DeFi","engagement":0-100,"authenticity":0-100,"alignment":0-100,"partnership":0-100,"recommendation":"Strong match or Watch or Avoid","reason":"One sentence why","telegram":"@telegramhandle or null","email":"email if known or null","recenttopic":"Their most recent content topic"}] Only real known crypto influencers. JSON only, no other text.`}]});
 const text=response.content[0].text.replace(/```json|```/g,'').trim();
 const influencers=JSON.parse(text);
 const filtered=influencers.filter(i=>i.partnership>=parseInt(minscore));
@@ -22,7 +22,7 @@ res.json({success:true,data:filtered});
 app.post('/outreach',async(req,res)=>{
 const {name,handle,platform,niche,location,recenttopic,followers}=req.body;
 try{
-const response=await anthropic.messages.create({model:'claude-sonnet-4-5',max_tokens:1500,messages:[{role:'user',content:`You are a partnership outreach specialist for $DC (DubaiCoin), a Solana-based Web3 ecosystem by Ben X Capital. The founder is Nassreddine Ben Lassoued, CEO of Ben X Capital based in Dubai.\n\n$DC is built on Solana with staking (up to 35% APY), NFTs, DAO, and presale launching soon. Public launch at Token 2049 Singapore October 2026.\n\nGenerate a complete outreach kit for this influencer:\nName: ${name}\nHandle: ${handle}\nPlatform: ${platform}\nNiche: ${niche}\nLocation: ${location}\nFollowers: ${followers}\nRecent content: ${recenttopic}\n\nReturn ONLY a JSON object:\n{\n"email_subject":"Compelling email subject line",\n"email_body":"Professional cold email (5-6 lines max, personalized to their niche and recent content)",\n"telegram_message":"Short Telegram outreach message (3-4 lines, casual but professional)",\n"twitter_strategy":"3-step Twitter engagement strategy to warm them up before DM",\n"pitch_summary":"3-line $DC pitch tailored to their audience style",\n"best_channel":"Email or Telegram or Twitter - which channel to use first and why"\n}\n\nJSON only, no other text.`}]});
+const response=await anthropic.messages.create({model:'claude-sonnet-4-5',max_tokens:1500,messages:[{role:'user',content:`You are a partnership outreach specialist for $DC (DubaiCoin) by Ben X Capital. Founder: Nassreddine Ben Lassoued, CEO based in Dubai. $DC is on Solana with staking up to 35% APY, NFTs, DAO, presale soon. Token 2049 Singapore October 2026. Generate outreach kit for: Name: ${name}, Handle: ${handle}, Platform: ${platform}, Niche: ${niche}, Location: ${location}, Followers: ${followers}, Recent content: ${recenttopic}. Return ONLY JSON: {"email_subject":"subject","email_body":"5-6 line email","telegram_message":"3-4 line message","twitter_strategy":"3-step strategy","pitch_summary":"3-line pitch","best_channel":"which channel first and why"} JSON only.`}]});
 const text=response.content[0].text.replace(/```json|```/g,'').trim();
 const kit=JSON.parse(text);
 res.json({success:true,data:kit});
@@ -44,7 +44,7 @@ h1{font-size:28px;font-weight:600;margin-bottom:4px}
 .filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:1rem}
 label{font-size:12px;color:#888;display:block;margin-bottom:6px}
 select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:13px}
-.btn{width:100%;padding:14px;background:#f0b429;border:none;border-radius:8px;color:#000;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:2rem}
+.btn{width:100%;padding:14px;background:#f0b429;border:none;border-radius:8px;color:#000;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:2rem}
 .btn:hover{background:#e0a419}
 .loading{text-align:center;padding:2rem;color:#888;display:none}
 .spinner{display:inline-block;width:20px;height:20px;border:2px solid #333;border-top-color:#f0b429;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:8px;vertical-align:middle}
@@ -53,8 +53,8 @@ select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-r
 .card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:1.25rem}
 .card-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0}
-.name{font-weight:600;font-size:16px}
-.handle{font-size:13px;color:#888}
+.inf-name{font-weight:600;font-size:16px}
+.inf-handle{font-size:13px;color:#888}
 .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
 .b-platform{background:#1e3a5f;color:#60a5fa}
@@ -75,11 +75,11 @@ select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-r
 .outreach-btn:hover{background:#e0a419}
 .kit{background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:1rem;margin-top:12px;display:none}
 .kit-section{margin-bottom:14px}
-.kit-label{font-size:11px;color:#f0b429;font-weight:600;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px}
-.kit-content{font-size:13px;color:#ccc;line-height:1.6;white-space:pre-wrap;background:#1a1a1a;padding:10px;border-radius:6px}
+.kit-label{font-size:11px;color:#f0b429;font-weight:600;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px;display:flex;justify-content:space-between;align-items:center}
+.kit-content{font-size:13px;color:#ccc;line-height:1.6;background:#1a1a1a;padding:10px;border-radius:6px;white-space:pre-wrap}
 .kit-loading{text-align:center;padding:1rem;color:#888;font-size:13px}
-.best-channel{background:#1e3a1e;border:1px solid #2a4a2a;border-radius:8px;padding:10px;font-size:13px;color:#4ade80}
-.copy-btn{font-size:11px;padding:3px 8px;background:#2a2a2a;border:1px solid #333;border-radius:4px;color:#888;cursor:pointer;margin-left:8px;float:right}
+.best-channel{background:#1e3a1e;border:1px solid #2a4a2a;border-radius:8px;padding:10px;font-size:13px;color:#4ade80;margin-bottom:12px}
+.copy-btn{font-size:11px;padding:3px 10px;background:#2a2a2a;border:1px solid #333;border-radius:4px;color:#aaa;cursor:pointer}
 .copy-btn:hover{color:#fff}
 .empty{text-align:center;padding:3rem;color:#888}
 @media(max-width:700px){.filters{grid-template-columns:1fr 1fr}}
@@ -99,15 +99,15 @@ select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-r
 <div><label>Niche</label>
 <select id="niche">
 <option value="solana">Solana ecosystem</option>
-<option value="defi">DeFi & staking</option>
-<option value="web3">Web3 & NFTs</option>
+<option value="defi">DeFi and staking</option>
+<option value="web3">Web3 and NFTs</option>
 <option value="presale">Token presales</option>
 <option value="all">All crypto</option>
 </select></div>
 <div><label>Location</label>
 <select id="location">
 <option value="global">Global</option>
-<option value="UAE and Middle East">UAE & Middle East</option>
+<option value="UAE and Middle East">UAE and Middle East</option>
 <option value="USA">USA</option>
 <option value="Europe">Europe</option>
 <option value="Asia">Asia</option>
@@ -129,44 +129,60 @@ select{width:100%;padding:10px;background:#1a1a1a;border:1px solid #333;border-r
 <div class="cards" id="results"><div class="empty">Click Find to discover crypto influencers for $DC partnerships</div></div>
 </div>
 <script>
-const colors=['#f0b429','#60a5fa','#4ade80','#f87171','#a78bfa','#fb923c'];
+const colors=["#f0b429","#60a5fa","#4ade80","#f87171","#a78bfa","#fb923c"];
+let currentData=[];
 async function search(){
-const platform=document.getElementById('platform').value;
-const niche=document.getElementById('niche').value;
-const minscore=document.getElementById('minscore').value;
-const location=document.getElementById('location').value;
-document.getElementById('loading').style.display='block';
-document.getElementById('results').innerHTML='';
-const res=await fetch('/find',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform,niche,minscore,location})});
+const platform=document.getElementById("platform").value;
+const niche=document.getElementById("niche").value;
+const minscore=document.getElementById("minscore").value;
+const location=document.getElementById("location").value;
+document.getElementById("loading").style.display="block";
+document.getElementById("results").innerHTML="";
+try{
+const res=await fetch("/find",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({platform,niche,minscore,location})});
 const data=await res.json();
-document.getElementById('loading').style.display='none';
-if(!data.success){document.getElementById('results').innerHTML='<div class="empty">Error: '+data.error+'</div>';return;}
-const html=data.data.map((inf,i)=>{
-const initials=inf.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
-const recClass=inf.recommendation==='Strong match'?'rec-strong':inf.recommendation==='Watch'?'rec-watch':'rec-avoid';
-return '<div class="card" id="card-'+i+'"><div class="card-top"><div class="avatar" style="background:'+colors[i%6]+';color:#000">'+initials+'</div><div><div class="name">'+inf.name+'</div><div class="handle">'+inf.handle+' · '+inf.followers+' followers</div></div></div><div class="badges"><span class="badge b-platform">'+inf.platform+'</span><span class="badge b-size">'+inf.followers+'</span><span class="badge b-niche">'+inf.niche+'</span><span class="badge b-location">📍'+inf.location+'</span></div><div class="score-row"><span class="score-label">Engagement</span><div class="bar"><div class="fill" style="width:'+inf.engagement+'%;background:#60a5fa"></div></div><span class="score-val">'+inf.engagement+'</span></div><div class="score-row"><span class="score-label">Authenticity</span><div class="bar"><div class="fill" style="width:'+inf.authenticity+'%;background:#4ade80"></div></div><span class="score-val">'+inf.authenticity+'</span></div><div class="score-row"><span class="score-label">$DC alignment</span><div class="bar"><div class="fill" style="width:'+inf.alignment+'%;background:#f0b429"></div></div><span class="score-val">'+inf.alignment+'</span></div><div class="score-row"><span class="score-label">Partnership fit</span><div class="bar"><div class="fill" style="width:'+inf.partnership+'%;background:#a78bfa"></div></div><span class="score-val">'+inf.partnership+'</span></div><div class="card-footer"><div><span class="'+recClass+'">'+inf.recommendation+'</span><div class="reason">'+inf.reason+'</div></div><button class="outreach-btn" onclick="getOutreach('+i+','+JSON.stringify(inf).replace(/</g,'&lt;')+')">Get Outreach Kit</button></div><div class="kit" id="kit-'+i+'"></div></div>';
-}).join('');
-document.getElementById('results').innerHTML=html||'<div class="empty">No influencers found. Try lowering the minimum score.</div>';
+document.getElementById("loading").style.display="none";
+if(!data.success){document.getElementById("results").innerHTML="<div class=empty>Error: "+data.error+"</div>";return;}
+currentData=data.data;
+renderCards();
+}catch(e){document.getElementById("loading").style.display="none";document.getElementById("results").innerHTML="<div class=empty>Error: "+e.message+"</div>";}
 }
-async function getOutreach(idx,inf){
-const kit=document.getElementById('kit-'+idx);
-kit.style.display='block';
-kit.innerHTML='<div class="kit-loading"><span class="spinner"></span>Generating outreach kit...</div>';
-const res=await fetch('/outreach',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(inf)});
+function renderCards(){
+const html=currentData.map((inf,i)=>{
+const initials=inf.name.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+const recClass=inf.recommendation==="Strong match"?"rec-strong":inf.recommendation==="Watch"?"rec-watch":"rec-avoid";
+return "<div class=card id=card-"+i+"><div class=card-top><div class=avatar style='background:"+colors[i%6]+";color:#000'>"+initials+"</div><div><div class=inf-name>"+inf.name+"</div><div class=inf-handle>"+inf.handle+" - "+inf.followers+" followers</div></div></div><div class=badges><span class='badge b-platform'>"+inf.platform+"</span><span class='badge b-size'>"+inf.followers+"</span><span class='badge b-niche'>"+inf.niche+"</span><span class='badge b-location'>"+inf.location+"</span></div><div class=score-row><span class=score-label>Engagement</span><div class=bar><div class=fill style='width:"+inf.engagement+"%;background:#60a5fa'></div></div><span class=score-val>"+inf.engagement+"</span></div><div class=score-row><span class=score-label>Authenticity</span><div class=bar><div class=fill style='width:"+inf.authenticity+"%;background:#4ade80'></div></div><span class=score-val>"+inf.authenticity+"</span></div><div class=score-row><span class=score-label>$DC alignment</span><div class=bar><div class=fill style='width:"+inf.alignment+"%;background:#f0b429'></div></div><span class=score-val>"+inf.alignment+"</span></div><div class=score-row><span class=score-label>Partnership fit</span><div class=bar><div class=fill style='width:"+inf.partnership+"%;background:#a78bfa'></div></div><span class=score-val>"+inf.partnership+"</span></div><div class=card-footer><div><span class="+recClass+">"+inf.recommendation+"</span><div class=reason>"+inf.reason+"</div></div><button class=outreach-btn onclick='getOutreach("+i+")'>Get Outreach Kit</button></div><div class=kit id=kit-"+i+"></div></div>";
+}).join("");
+document.getElementById("results").innerHTML=html||"<div class=empty>No influencers found. Try lowering the minimum score.</div>";
+}
+async function getOutreach(idx){
+const inf=currentData[idx];
+const kit=document.getElementById("kit-"+idx);
+kit.style.display="block";
+kit.innerHTML="<div class=kit-loading><span class=spinner></span>Generating outreach kit...</div>";
+try{
+const res=await fetch("/outreach",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(inf)});
 const data=await res.json();
-if(!data.success){kit.innerHTML='<div class="kit-loading">Error: '+data.error+'</div>';return;}
+if(!data.success){kit.innerHTML="<div class=kit-loading>Error: "+data.error+"</div>";return;}
 const k=data.data;
-kit.innerHTML='<div class="best-channel">Best channel: '+k.best_channel+'</div>'+
-'<div class="kit-section" style="margin-top:12px"><div class="kit-label">Email subject<button class="copy-btn" onclick="copy(this,\`'+k.email_subject.replace(/`/g,"'")+'\`)">Copy</button></div><div class="kit-content">'+k.email_subject+'</div></div>'+
-'<div class="kit-section"><div class="kit-label">Cold email<button class="copy-btn" onclick="copy(this,\`'+k.email_body.replace(/`/g,"'").replace(/\n/g,'\\n')+'\`)">Copy</button></div><div class="kit-content">'+k.email_body+'</div></div>'+
-'<div class="kit-section"><div class="kit-label">Telegram message<button class="copy-btn" onclick="copy(this,\`'+k.telegram_message.replace(/`/g,"'").replace(/\n/g,'\\n')+'\`)">Copy</button></div><div class="kit-content">'+k.telegram_message+'</div></div>'+
-'<div class="kit-section"><div class="kit-label">Twitter strategy</div><div class="kit-content">'+k.twitter_strategy+'</div></div>'+
-'<div class="kit-section"><div class="kit-label">$DC pitch for their audience</div><div class="kit-content">'+k.pitch_summary+'</div></div>';
+window["kit"+idx]=k;
+kit.innerHTML="<div class=best-channel>Best channel: "+k.best_channel+"</div>"+
+"<div class=kit-section><div class=kit-label><span>Email subject</span><button class=copy-btn onclick='copyKit("+idx+","email_subject")'>Copy</button></div><div class=kit-content id='ks-"+idx+"-email_subject'>"+k.email_subject+"</div></div>"+
+"<div class=kit-section><div class=kit-label><span>Cold email</span><button class=copy-btn onclick='copyKit("+idx+","email_body")'>Copy</button></div><div class=kit-content id='ks-"+idx+"-email_body'>"+k.email_body+"</div></div>"+
+"<div class=kit-section><div class=kit-label><span>Telegram message</span><button class=copy-btn onclick='copyKit("+idx+","telegram_message")'>Copy</button></div><div class=kit-content id='ks-"+idx+"-telegram_message'>"+k.telegram_message+"</div></div>"+
+"<div class=kit-section><div class=kit-label><span>Twitter strategy</span></div><div class=kit-content>"+k.twitter_strategy+"</div></div>"+
+"<div class=kit-section><div class=kit-label><span>$DC pitch for their audience</span></div><div class=kit-content>"+k.pitch_summary+"</div></div>";
+}catch(e){kit.innerHTML="<div class=kit-loading>Error: "+e.message+"</div>";}
 }
-function copy(btn,text){navigator.clipboard.writeText(text.replace(/\\n/g,'\n'));btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000);}
+function copyKit(idx,field){
+const el=document.getElementById("ks-"+idx+"-"+field);
+navigator.clipboard.writeText(el.innerText);
+event.target.textContent="Copied!";
+setTimeout(()=>event.target.textContent="Copy",2000);
+}
 </script>
 </body>
 </html>`);
 });
 
-app.listen(PORT,()=>console.log('Scout running on port',PORT));
+app.listen(PORT,()=>console.log("Scout running on port",PORT));
